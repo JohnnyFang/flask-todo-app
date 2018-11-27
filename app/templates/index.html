@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Material Design for Bootstrap fonts and icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+
+  <!-- Material Design for Bootstrap CSS -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css"
+        integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/todo.css') }}">
+  <title>TODO Webapp</title>
+</head>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add new todo form</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="todoForm">
+          <div class="form-group">
+            <label for="exampleInput">Todo</label>
+            <input class="form-control form-control-lg" name="text" type="text" placeholder="type your text here">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="postTodo()" data-dismiss="modal">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- end Modal -->
+<body>
+<main role="main" class="container">
+
+  <div class="my-3 p-3 bg-white rounded box-shadow">
+    <small class="d-block text-right mt-3">
+      <a href="#" data-toggle="modal" data-target="#exampleModal">Add New</a>
+    </small>
+
+    <h6 class="border-bottom border-gray pb-2 mb-0">My Todo List</h6>
+    <div class="table-responsive">
+      <div id="toolbar">
+        <button id="remove" class="btn btn-danger" disabled>
+            <i class="glyphicon glyphicon-remove"></i> Delete
+        </button>
+    </div>
+      <table id="table" data-toggle="table" data-classes="table table-no-bordered table-striped"
+             data-show-columns="true"
+             data-checkbox="true"
+             data-search="true"
+             data-show-toggle="true"
+             data-pagination="true"
+             data-sort-name="id"
+{#             data-sort-order="asc"#}
+{#             data-show-refresh="true"#}
+             data-id-field="id"
+             data-url="/todo"
+{#             data-response-handler="responseHandler"#}
+      >
+        <thead>
+        <tr>
+          <th data-checkbox="true"></th>
+          <th data-field="id" data-visible="false">ID</th>
+          <th data-field="text" data-sortable="true"></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for todo in todos %}
+          <tr>
+            <td></td>
+            <td>{{ todo.id }}</td>
+            <td>{{ todo.text }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+{#    </div>#}
+  </div>
+</main>
+{#<h1>Hello, Welcome to TODO!</h1>#}
+
+</body>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+			  crossorigin="anonymous"></script>
+<script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js"
+        integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U"
+        crossorigin="anonymous"></script>
+<script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js"
+        integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
+        crossorigin="anonymous"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.12.1/bootstrap-table.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $('body').bootstrapMaterialDesign();
+  });
+  $('#myModal').on('shown.bs.modal', function () {
+    $('#myInput').trigger('focus')
+  })
+</script>
+<script>
+    var $table = $('#table'),
+        $remove = $('#remove'),
+        selections = [];
+    function initTable() {
+        $table.bootstrapTable({
+        });
+        // sometimes footer render error.
+        setTimeout(function () {
+            $table.bootstrapTable('resetView');
+        }, 200);
+        $table.on('check.bs.table uncheck.bs.table ' +
+                'check-all.bs.table uncheck-all.bs.table', function () {
+            $remove.prop('disabled', !$table.bootstrapTable('getSelections').length);
+            // save your data, here just save the current page
+            selections = getIdSelections();
+            // push or splice the selections if you want to save all data selections
+        });
+        $table.on('expand-row.bs.table', function (e, index, row, $detail) {
+            if (index % 2 == 1) {
+                $detail.html('Loading from ajax request...');
+                $.get('LICENSE', function (res) {
+                    $detail.html(res.replace(/\n/g, '<br>'));
+                });
+            }
+        });
+        $table.on('all.bs.table', function (e, name, args) {
+            console.log(name, args);
+        });
+        $remove.click(function () {
+            var ids = getIdSelections();
+            id_data = JSON.stringify({"ids": ids});
+            console.log(id_data);
+
+            $.ajax({
+              url: '/todo/delete',
+              data: id_data,
+              dataType: 'json',
+              contentType: "application/json",
+              type: 'POST',
+              success: function (response) {
+                $table.bootstrapTable('remove', {
+                    field: 'id',
+                    values: ids
+                });
+                $remove.prop('disabled', true);
+
+              },
+              error:function (error) {
+                console.log("ERROR trying to delete");
+              }
+            });
+
+        });
+        $(window).resize(function () {
+            $table.bootstrapTable('resetView', {
+                height: getHeight()
+            });
+        });
+    }
+    function getIdSelections() {
+        return $.map($table.bootstrapTable('getSelections'), function (row) {
+            return row.id
+        });
+    }
+    function responseHandler(res) {
+        $.each(res.rows, function (i, row) {
+            row.state = $.inArray(row.id, selections) !== -1;
+        });
+        return res;
+    }
+    window.operateEvents = {
+        'click .like': function (e, value, row, index) {
+            alert('You click like action, row: ' + JSON.stringify(row));
+        },
+        'click .remove': function (e, value, row, index) {
+            $table.bootstrapTable('remove', {
+                field: 'id',
+                values: [row.id]
+            });
+        }
+    };
+    function getHeight() {
+        return $(window).height() - $('h1').outerHeight(true);
+    }
+    $(function () {
+        initTable();
+    });
+    function postTodo(){
+    xhr = new XMLHttpRequest();
+    xhr.open('POST', '/todo');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            $('#myModal').modal('dispose');
+            $('#todoForm').find('input[name="text"]').val('');
+            $table.bootstrapTable('refresh');
+
+        }
+        else if (xhr.status !== 200) {
+
+        }
+    };
+    xhr.send(JSON.stringify({"text": $('#todoForm').find('input[name="text"]').val()}));
+  }
+</script>
+</html>
