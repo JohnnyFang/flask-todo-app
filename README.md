@@ -7,7 +7,7 @@ A simple todo web app made with Flask.
   
 
 The table in the database must contain two columns:    
-* id [integer data type]
+* id [serial data type]
 * text [character data type]
 
 
