@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, Response
+from flask import request, jsonify, Response
 
 from app import db
 from app.models import Todo, TodoSchema

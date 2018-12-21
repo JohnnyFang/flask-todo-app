@@ -17,9 +17,6 @@ def create_app(config_name):
     db.init_app(app)
     ma.init_app(app)
 
-    from . import models
-    from app.todo_api import views
-
     from .webapp import webapp as webapp_blueprint
     app.register_blueprint(webapp_blueprint)
 
